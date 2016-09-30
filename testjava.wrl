@@ -1,0 +1,38 @@
+#VRML V2.0 utf8
+PROTO Kubus [ field SFColor diffuseColor 0 0 0 ]
+{
+	Shape
+	{
+		geometry Box {}
+		appearance Appearance
+		{
+			material Material { diffuseColor IS diffuseColor }
+		}
+	}
+}
+
+PROTO FiguurN
+[
+	eventIn MFNode addChildren
+]
+{
+	Transform
+	{
+		addChildren IS addChildren
+	}
+}
+
+DEF Test Transform
+{
+}
+		
+DEF OpenVault Script
+{ 
+	directOutput TRUE
+	field SFNode Test USE Test
+	field MFNode First
+	[
+		Kubus { diffuseColor 0 0 1 }
+	]
+	url "Testjava.class"
+}

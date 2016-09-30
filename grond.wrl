@@ -1,0 +1,108 @@
+#VRML V2.0 utf8
+
+EXTERNPROTO Boom [ exposedField SFVec3f translation] ["boom.wrl"]
+EXTERNPROTO Socket [ exposedField SFVec3f translation] ["socket.wrl"]
+EXTERNPROTO Robot
+[
+	exposedField  SFVec3f translation
+	exposedField  SFRotation rotation
+	exposedField  SFInt32 whichChoice
+	exposedField  SFFloat transparency
+]
+["robot.wrl"]
+EXTERNPROTO Boulder
+[
+	exposedField  SFVec3f translation
+	exposedField  SFInt32 whichChoice
+	eventIn       SFInt32 set_index
+	eventIn       SFNode  set_script
+	eventIn       SFTime fadeout
+]
+["boulder.wrl"]
+
+Background
+{ 
+	skyColor [ 0 0 0.3 ]
+}
+
+#Viewpoint
+#{ 
+#	position       10 10 30
+#	description    "AJ's gezichtspunt"
+#}
+
+DEF V1 Viewpoint
+{ 
+	position       18.5 9.5 18.5
+	description    "Sentinel 1"
+#	jump FALSE
+}
+
+DEF V2 Viewpoint
+{ 
+	position       18.5 9.5 18.5
+	description    "Sentinel 2"
+#	jump FALSE
+}
+
+DirectionalLight
+{ 
+	direction      0 -1 0
+}
+
+NavigationInfo
+{ 
+#  type [ "EXAMINE" ]
+}
+
+DEF Sentinel Group
+{
+	children
+	[	
+		DEF Clicker TouchSensor {}
+		Shape
+		{ 
+			geometry DEF Grond IndexedFaceSet
+			{
+				colorPerVertex FALSE
+				solid FALSE
+				coord DEF coord Coordinate { }
+				color Color
+				{
+					color [ 0 0 0, 0 0 1, 0 1 0, 0 1 1, 0.2 0.2 0.2, 1 0 1, 1 1 0, 1 1 1 ]
+				}
+			}
+			appearance Appearance
+			{
+				material Material { diffuseColor 1 0 0 }
+			}
+		}
+		DEF Robots Group
+		{
+			children
+			[
+				Robot
+				{
+					whichChoice -2
+					transparency 0
+					translation 18.5 9.0 18.5
+				}
+				Robot { }
+				Robot { }
+				Robot { }
+				Robot { }
+			]
+		}
+		DEF Boulders Group
+		{
+			children
+			[
+				Boulder { }
+				Boulder { }
+				Boulder { }
+				Boulder { }
+				Boulder { }
+			]
+		}
+	]
+}

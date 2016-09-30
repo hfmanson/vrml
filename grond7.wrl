@@ -1,0 +1,179 @@
+#VRML V2.0 utf8
+
+EXTERNPROTO Boom [ exposedField SFVec3f translation ] ["boom.wrl"]
+
+DEF Sentinel Group
+{
+	children
+	[	
+		DEF Clicker TouchSensor {}
+		Shape
+		{ 
+			geometry DEF Grond IndexedFaceSet
+			{
+				colorPerVertex FALSE
+				solid FALSE
+				coord DEF coord Coordinate { }
+				color Color
+				{
+					color
+					[
+						0 0 0,
+						0 0 1,
+						0 1 0,
+						0 1 1,
+						0.2 0.2 0.2,
+						1 0 1,
+						1 1 0,
+						1 1 1
+					]
+				}
+			}
+			appearance Appearance
+			{
+				material Material { diffuseColor 1 0 0 }
+			}
+		}
+	]
+}
+
+DEF OpenVault Script
+{ 
+	# Declarations of what's in this Script node:
+	field MFVec3f point []
+	field SFNode Grond USE Grond
+	field SFNode coord USE coord
+	field MFInt32 coordIndex [ ]
+	field MFInt32 colorIndex [ ]
+	field SFNode sentinel USE Sentinel
+
+	url "javascript:
+
+	function initialize()
+	{
+		var RowSize;
+		var ColSize;
+		var p1, p2, p3, p4;
+		var c1, c2, c3, c4;
+		var yCoord = new Array
+		(
+			new Array(10, 10,  9,  9, 10,  9),
+			new Array(10, 10, 10, 10, 10, 10),
+			new Array(10, 10, 11, 11, 10, 11),
+			new Array(10, 10, 11, 11, 10, 11),
+			new Array(10, 10, 10, 10, 10, 10),
+			new Array(10, 10, 10, 10,  9,  9),
+			new Array(10, 10, 10, 10,  9,  8),
+			new Array(10, 10, 10, 10,  9,  8),
+			new Array( 9, 10, 10, 10,  9,  8),
+			new Array( 9, 10, 10, 10,  9,  9)
+		);
+
+		RowSize = yCoord.length;
+		ColSize = yCoord[0].length;
+		boomindex = 0;
+		print('Script 2 initialized.'); 
+		i = RowSize * ColSize;
+		color = 1;
+
+		for (row = RowSize - 1; row >= 0; row--)
+		{
+			for (col = ColSize - 1; col >= 0; col--)
+			{
+				vertex = new SFVec3f(col, yCoord[row][col] - 9, row);
+				point[--i] = vertex;
+			}
+		}
+		idx = 0;
+		j = 0;
+		k = 0;
+		for (row = 0; row < RowSize - 1; row++)
+		{
+			for (col = 0; col < ColSize - 1; col++)
+			{
+				p1 = yCoord[row][col];
+				p2 = yCoord[row][col + 1];
+				p3 = yCoord[row + 1][col + 1];
+				p4 = yCoord[row + 1][col];
+				c1 = row * ColSize + col;
+				c2 = c1 + 1;
+				c3 = c2 + ColSize;
+				c4 = c1 + ColSize;
+
+				if (p1 != p2 && p1 != p3 && p1 != p4)
+				{
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = -1;
+					colorIndex[k++] = 4;
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+				}
+				else if (p2 != p1 && p2 != p3 && p2 != p4)
+				{
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+				}
+				else if (p3 != p1 && p3 != p2 && p3 != p4)
+				{
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+				}
+				else if (p4 != p1 && p4 != p2 && p4 != p3)
+				{
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+				}
+				else
+				{
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = c4;
+					coordIndex[j++] = -1;
+					if (p1 == p2 && p1 == p3 && p1 == p4)
+					{
+						if (c1 % 2 == 0 && row % 2 == 0)	
+							colorIndex[k++] = 1;
+						else
+							colorIndex[k++] = 2;
+					}
+					else
+						colorIndex[k++] = 4;
+				}
+			}
+		}
+		coord.set_point = point;
+		Grond.set_coordIndex = coordIndex;
+		Grond.set_colorIndex = colorIndex;
+	}"
+
+}

@@ -1,0 +1,401 @@
+#VRML V2.0 utf8
+
+Background
+{ 
+	skyColor [ 0 0 0.3 ]
+}
+
+Viewpoint
+{ 
+	orientation    0  -1 -1 0
+	position       16 10 50
+	description    "Random map's gezichtspunt"
+}
+
+Viewpoint
+{ 
+	position       10 10 30
+	description    "AJ's gezichtspunt"
+}
+
+Viewpoint
+{ 
+	position       18.5 9.5 18.5
+	description    "Henri's gezichtspunt"
+}
+
+DirectionalLight
+{ 
+	direction      0 -1 0
+}
+
+NavigationInfo
+{ 
+#  type [ "EXAMINE" ]
+}
+
+DEF Sentinel Group
+{
+	children
+	[	
+		DEF Clicker TouchSensor {}
+		Shape
+		{ 
+			geometry DEF Grond IndexedFaceSet
+			{
+				colorPerVertex FALSE
+				solid FALSE
+				coord DEF coord Coordinate { }
+				color Color
+				{
+					color [ 0 0 0, 0 0 1, 0 1 0, 0 1 1, 0.2 0.2 0.2, 1 0 1, 1 1 0, 1 1 1 ]
+				}
+			}
+			appearance Appearance
+			{
+				material Material { diffuseColor 1 0 0 }
+			}
+		}
+	]
+}
+
+DEF SentinelScript Script
+{ 
+	# Declarations of what's in this Script node:
+  	field MFVec3f point []
+	field SFNode Grond USE Grond
+	field SFNode coord USE coord
+	field MFInt32 coordIndex [ ]
+	field MFInt32 colorIndex [ ]
+	field SFNode sentinel USE Sentinel
+
+	url "javascript:
+	var row, kol, i, j, k;
+	var vertex;
+	var color;
+	var map;
+	var map2;
+	var RowSize;
+	var ColSize;
+	var RowSize2;
+	var ColSize2;
+	var MediumHeight;
+	var Number_Heights;
+	var DefHeight;
+
+	//////////////////////////////////////////////////////////////////////////////
+	function MapFill(height)
+	{
+		// map initialiseren
+		var r, k;
+
+		map = new Array(RowSize)
+		for (r = 0; r < RowSize; r++)
+		{
+			map[r] = new Array(ColSize);
+			for (k = 0; k < ColSize; k++)
+				map[r][k] = height;
+		}
+	}
+	//////////////////////////////////////////////////////////////////////////////
+	function Map2Fill()
+	{
+		// map2 vullen
+		var r, k, orgheight;
+
+		map2 = new Array(RowSize2)
+		for (r = 0; r < RowSize; r++)
+		{
+			map2[r*2] = new Array(ColSize2);
+			map2[r*2+1] = new Array(ColSize2);
+			for (k = 0; k < ColSize; k++)
+			{
+				orgheight = map[r][k];
+				map2[r*2][k*2]     = orgheight;
+				map2[r*2][k*2+1]   = orgheight;
+				map2[r*2+1][k*2]   = orgheight;
+				map2[r*2+1][k*2+1] = orgheight;
+			}
+		}
+	}
+	//////////////////////////////////////////////////////////////////////////////
+	function MapSetEdgeToDef(height)
+	{
+	    var tlrx, tlry;
+	
+	    for (tlrx=0; tlrx<RowSize; tlrx++)
+		{
+	        map[tlrx][0] = height;
+	        map[tlrx][ColSize-1] = height;
+	    }
+	    for (tlry=0; tlry<ColSize; tlry++)
+		{
+	        map[0][tlry] = height;
+	        map[RowSize-1][tlry] = height;
+	    }
+	}
+	//////////////////////////////////////////////////////////////////////////////
+	function MapRandomSpotsRandomHeigh()
+	{
+	    var tlrx, tlry;
+	
+	    for (tlrx=1; tlrx<RowSize-1; tlrx++){
+	        for (tlry=1; tlry<ColSize-1; tlry++){
+				if (Math.random() < 0.5)
+					map[tlrx][tlry] = Number_Heights;
+				else
+					map[tlrx][tlry] = 0;
+	        }
+	    }
+	}
+	//////////////////////////////////////////////////////////////////////////////
+	function MapRandomSpotsRandomHeigh2()
+	{
+	    var tlrx, tlry;
+	
+	    for (tlrx=1; tlrx<RowSize-1; tlrx++){
+	        for (tlry=1; tlry<ColSize-1; tlry++){
+				if ( Math.random() < 0.40)
+					map[tlrx][tlry] = Math.floor(Math.random() * (Number_Heights));
+				else
+					map[tlrx][tlry] = DefHeight;
+	        }
+	    }
+	}
+	//////////////////////////////////////////////////////////////////////////////
+	function MapSetEdgeToDef(startval)
+	{
+	    var tlrx, tlry;
+	
+	    for (tlrx=1; tlrx<RowSize; tlrx++){
+	        map[tlrx][0] = startval;
+	        map[tlrx][ColSize-1] = startval;
+	    }
+	    for (tlry=0; tlry<ColSize; tlry++){
+	        map[0][tlry] = startval;
+	        map[RowSize-1][tlry] = startval;
+	    }
+	}
+	//////////////////////////////////////////////////////////////////////////////
+	function SetRelative(posx, posy, heighta, dist)
+	/*
+	Zoek alle toppen 'b' binnen het bereik van top 'a'(posx,posz) en zorg dat er 
+	geen te groot hoogteverschil ertussen is.
+	*/
+	{
+	    var tlrx, tlry;
+	    var minx, maxx, miny, maxy;
+		var heightb;
+	    
+	    minx=posx-dist; if (minx < 0) minx = 0;
+		maxx=posx+dist; if (maxx >= RowSize) maxx = RowSize-1;
+	    miny=posy-dist; if (miny < 0) miny = 0;
+		maxy=posy+dist; if (maxy >= ColSize) maxy = ColSize-1;
+
+		for (tlry=miny; tlry<=maxy; tlry++){
+			for (tlrx=minx; tlrx<=maxx; tlrx++){
+				//Only the fields on 'dist' from the (posx,posz):
+				if ( (tlrx==minx) || (tlrx==maxx) || (tlry==miny) || (tlry==maxy) ){
+					heightb = map[tlrx][tlry];
+					//If b is top..:
+					//Als b te veel hoger is dan a, b aanpassen:
+					if (heightb > heighta + dist)
+					{
+						map[tlrx][tlry] = heighta + dist;
+					}
+					//Als b te veel lager is dan a, b aanpassen:
+					if (heightb + dist < heighta)
+					{
+						map[tlrx][tlry] = heighta - dist;
+					}
+				}
+			}
+		}
+	}
+	
+	//////////////////////////////////////////////////////////////////////////////
+	function MapEqualize()
+	{
+		//Check voor elke top of in de buurt liggende punten wel mogen:
+	    var tlrx, tlry;
+	    var height;
+	    var dist;
+	    
+		//Doorloop alle punten behalve de rand:
+	    for (tlry=0; tlry<ColSize; tlry++){
+		    for (tlrx=0; tlrx<RowSize; tlrx++){
+	            height = map[tlrx][tlry];
+				for(dist=1; dist<Number_Heights; dist++){
+					SetRelative(tlrx, tlry, height, dist);
+				}
+	        }
+	    }
+	}
+	//////////////////////////////////////////////////////////////////////////////
+	function MapEqualize2()
+	{
+		//Check voor elke top of in de buurt liggende punten wel mogen:
+	    var tlrx, tlry, height, dist;
+	    
+		//Doorloop alle punten:
+	    for (tlry=0; tlry<ColSize; tlry++){
+		    for (tlrx=0; tlrx<RowSize; tlrx++){
+	            height = map[tlrx][tlry];
+				if (map[tlrx][tlry] != DefHeight){
+					for(dist=1; dist<Number_Heights; dist++){
+						SetRelative(tlrx, tlry, height, dist);
+					}
+				}
+	        }
+	    }
+	}
+	//////////////////////////////////////////////////////////////////////////////
+	function printmap(m, rs)
+	{
+		var r;
+		for (r=0; r<rs; r++)
+		{
+			print(m[r]);
+		}
+		print(' ');
+	}
+
+	function initialize()
+	{
+		var p1, p2, p3, p4;
+		var c1, c2, c3, c4;
+
+//		RowSize = 32;
+//		ColSize = 32;
+		RowSize = 16;
+		ColSize = 16;
+		RowSize2 = RowSize*2;
+		ColSize2 = ColSize*2;
+		Number_Heights = 8;
+		MediumHeight = Number_Heights / 2;
+		DefHeight = MediumHeight;
+		MapFill(MediumHeight);
+		MapSetEdgeToDef(MediumHeight);
+		printmap(map, RowSize);
+		MapRandomSpotsRandomHeigh2();
+		printmap(map, RowSize);
+		MapEqualize2();
+		printmap(map, RowSize);
+		Map2Fill();
+		
+		printmap(map, RowSize);
+		printmap(map2, RowSize*2);
+
+		// henri's algoritme
+		i = RowSize2 * ColSize2;
+		color = 1;
+
+		for (row = RowSize2 - 1; row >= 0; row--)
+		{
+			for (col = ColSize2 - 1; col >= 0; col--)
+			{
+				vertex = new SFVec3f(col, map2[row][col], row);
+				point[--i] = vertex;
+			}
+		}
+		j = 0;
+		k = 0;
+		for (row = 0; row < RowSize2 - 1; row++)
+		{
+			for (col = 0; col < ColSize2 - 1; col++)
+			{
+				p1 = map2[row][col];
+				p2 = map2[row][col + 1];
+				p3 = map2[row + 1][col + 1];
+				p4 = map2[row + 1][col];
+				c1 = row * ColSize2 + col;
+				c2 = c1 + 1;
+				c3 = c2 + ColSize2;
+				c4 = c1 + ColSize2;
+
+				if (p1 != p2 && p1 != p3 && p1 != p4)
+				{
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = -1;
+					colorIndex[k++] = 4;
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+				}
+				else if (p2 != p1 && p2 != p3 && p2 != p4)
+				{
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+				}
+				else if (p3 != p1 && p3 != p2 && p3 != p4)
+				{
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+				}
+				else if (p4 != p1 && p4 != p2 && p4 != p3)
+				{
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = c4;	
+					coordIndex[j++] = -1;	
+					colorIndex[k++] = 4;
+				}
+				else
+				{
+					coordIndex[j++] = c1;	
+					coordIndex[j++] = c2;	
+					coordIndex[j++] = c3;	
+					coordIndex[j++] = c4;
+					coordIndex[j++] = -1;
+					if (p1 == p2 && p1 == p3 && p1 == p4)
+					{
+						if (row % 2 == 0)
+						{
+							if (col % 2 == 0)
+								colorIndex[k++] = 1;
+							else
+								colorIndex[k++] = 2;
+						}
+						else
+						{
+							if (col % 2 == 0)
+								colorIndex[k++] = 2;
+							else
+								colorIndex[k++] = 1;
+						}
+					}
+					else
+						colorIndex[k++] = 4;
+				}
+			}
+		}
+		coord.set_point = point;
+		Grond.set_coordIndex = coordIndex;
+		Grond.set_colorIndex = colorIndex;
+	}"
+}

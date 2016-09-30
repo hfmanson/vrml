@@ -1,0 +1,65 @@
+#VRML V2.0 utf8
+
+EXTERNPROTO Boulder1
+[
+	exposedField SFVec3f translation
+	eventIn      SFTime  creationtime
+	eventOut     SFTime  touchtime
+]
+[ "boulder1.wrl" ]
+
+EXTERNPROTO Robot
+[
+	exposedField SFVec3f translation
+	eventIn      SFTime  creationtime
+	eventOut     SFTime  touchtime
+]
+[ "robot.wrl" ]
+
+PROTO Boulder
+[
+	exposedField  SFVec3f translation 0 0 0
+	eventIn       SFTime  creationtime
+	eventOut      SFTime  touchtime
+]
+{
+	DEF G Group
+	{
+		children
+		[
+			DEF B1 Boulder1
+			{
+				translation IS translation
+				creationtime IS creationtime
+			}
+			DEF BS Script
+			{ 
+				eventIn SFTime touchtime
+				field SFNode newboulder Robot { }
+				field SFNode G USE G
+				eventIn SFVec3f translation_changed
+	
+			    url "javascript:
+					var translation;
+					
+					function initialize()
+					{
+						print('Echt boulder1!');
+					}
+					function translation_changed(value)
+					{
+						translation = value;
+					}
+					function touchtime(value)
+					{
+						print('touchtime: touchtime = ' + value);
+						newboulder.set_translation = new SFVec3f(translation.x, translation.y + 0.5, translation.z);
+						newboulder.set_creationtime = value;
+						G.addChildren = new MFNode(newboulder);
+					}"
+			}
+		]
+	}
+	ROUTE B1.translation_changed TO BS.translation_changed
+	ROUTE B1.touchtime TO BS.touchtime
+}

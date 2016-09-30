@@ -1,0 +1,77 @@
+#VRML V2.0 utf8
+
+EXTERNPROTO Socket [ exposedField SFVec3f translation] ["socket.wrl"]
+
+Background
+{ 
+	skyColor [ 0 0 0.3 ]
+}
+
+#Viewpoint
+#{ 
+#	position       10 10 30
+#	description    "AJ's gezichtspunt"
+#}
+
+DEF V1 Viewpoint
+{ 
+	position       18.5 9.5 18.5
+	description    "Sentinel 1"
+#	jump FALSE
+}
+
+DEF V2 Viewpoint
+{ 
+	position       18.5 9.5 18.5
+	description    "Sentinel 2"
+#	jump FALSE
+}
+
+DirectionalLight
+{ 
+	direction      0 -1 0
+}
+
+NavigationInfo
+{ 
+#  type [ "EXAMINE" ]
+}
+
+DEF Sentinel Group
+{
+	children
+	[	
+		Shape
+		{ 
+			geometry DEF Grond IndexedFaceSet
+			{
+				colorPerVertex FALSE
+				solid FALSE
+				coord DEF coord Coordinate { }
+				color Color
+				{
+					color [ 0 0 0, 0 0 1, 0 1 0, 0 1 1, 0.2 0.2 0.2, 1 0 1, 1 1 0, 1 1 1 ]
+				}
+			}
+			appearance Appearance
+			{
+				material Material { diffuseColor 1 0 0 }
+			}
+		}
+		DEF SentinelScript Script
+		{ 
+			# Declarations of what's in this Script node:
+#			directOutput TRUE
+#			mustEvaluate TRUE
+			field MFInt32 coordIndex [ 456 ]
+
+			url "javascript:
+			function initialize()
+			{
+//				coordIndex[0] = 123;
+				print('coordIndex = ' + coordIndex);
+				print('coordIndex[0] = ' + coordIndex[0]);
+			}"
+		}
+	]
+}

@@ -1,0 +1,92 @@
+#VRML V2.0 utf8
+
+EXTERNPROTO Socket [ exposedField SFVec3f translation] ["socket.wrl"]
+
+EXTERNPROTO Boulder
+[
+	exposedField  SFVec3f translation
+]
+["boulder2.wrl"]
+
+Background
+{ 
+	skyColor [ 0 0 0.3 ]
+}
+
+#Viewpoint
+#{ 
+#	position       10 10 30
+#	description    "AJ's gezichtspunt"
+#}
+
+DEF V1 Viewpoint
+{ 
+	position       18.5 9.5 18.5
+	description    "Sentinel 1"
+#	jump FALSE
+}
+
+DEF V2 Viewpoint
+{ 
+	position       18.5 9.5 18.5
+	description    "Sentinel 2"
+#	jump FALSE
+}
+
+DirectionalLight
+{ 
+	direction      0 -1 0
+}
+
+NavigationInfo
+{ 
+  type [ "EXAMINE" ]
+}
+
+DEF Sentinel Group
+{
+	children
+	[	
+		DEF Clicker TouchSensor {}
+		Shape
+		{ 
+			geometry DEF Grond IndexedFaceSet
+			{
+				colorPerVertex FALSE
+				solid FALSE
+				coord DEF coord Coordinate { }
+				color Color
+				{
+					color [ 0 0 0, 0 0 1, 0 1 0, 0 1 1, 0.2 0.2 0.2, 1 0 1, 1 1 0, 1 1 1 ]
+				}
+			}
+			appearance Appearance
+			{
+				material Material { diffuseColor 1 0 0 }
+			}
+		}
+		DEF SentinelScript Script
+		{ 
+				# Declarations of what's in this Script node:
+			directOutput TRUE
+			eventIn SFVec3f hitPoint_changed
+			eventIn SFTime touchTime
+		  	field MFVec3f point []
+			field SFNode Grond USE Grond
+			field SFNode coord USE coord
+			field MFInt32 coordIndex [ ]
+			field MFInt32 colorIndex [ ]
+			field SFNode socket Socket { translation 4.5 11 12.5 }
+			field SFNode Sentinel USE Sentinel
+			field SFNode myself USE SentinelScript
+			field SFNode view1 USE V1
+			field SFNode view2 USE V2
+			field SFBool toggle FALSE
+			field SFNode boulder Boulder { }
+			field SFNode boulder1 Boulder { }
+			url "Sentinel.class"
+		}
+	]
+}
+ROUTE Clicker.hitPoint_changed TO SentinelScript.hitPoint_changed
+ROUTE Clicker.touchTime TO SentinelScript.touchTime

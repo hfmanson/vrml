@@ -1,0 +1,174 @@
+#VRML V2.0 utf8
+
+EXTERNPROTO Boom [ inputOutput SFFloat transparency ] [ "boom.wrl" ]
+
+EXTERNPROTO Boulder [ inputOutput SFFloat transparency ] [ "boulder.wrl" ]
+
+EXTERNPROTO Robot [ inputOutput SFFloat transparency ] [ "robot.wrl" ]
+
+PROTO Object
+[
+	inputOnly   SFString   set_proto_name
+	inputOutput SFVec3f    translation 0 0 0
+	inputOutput SFVec3f    scale 1 1 1
+	inputOutput SFRotation rotation 0 0 1 0
+	inputOutput SFNode     instance NULL
+	inputOutput SFNode     sentinel_script NULL
+	outputOnly  SFNode     remove_instance_changed
+	outputOnly  SFNode     robot_position_changed
+]
+{
+	DEF T Transform
+	{
+		translation IS translation
+		scale IS scale
+		rotation IS rotation
+		children
+		[
+			DEF TS TouchSensor {}
+			DEF Keyboard KeySensor {}
+			DEF FadeIn TimeSensor
+			{
+				cycleInterval 2.0
+			}
+			DEF FadeOut TimeSensor
+			{
+				cycleInterval 2.0
+			}
+			DEF ObjectScript Script
+			{ 
+				initializeOnly SFNode transform USE T
+				initializeOnly SFNode myself USE ObjectScript
+				initializeOnly SFNode FadeOut USE FadeOut
+				outputOnly     SFTime startTime
+				outputOnly     SFNode remove_instance_changed IS remove_instance_changed
+				outputOnly     SFNode robot_position_changed IS robot_position_changed
+				outputOnly     SFFloat fraction_changed
+				inputOnly      SFString keyPress
+				inputOnly      SFBool isActive
+				inputOnly      SFBool isOver
+				inputOnly      SFString set_proto_name IS set_proto_name
+				inputOnly      SFFloat set_fraction
+				inputOnly      SFNode set_removeChild
+				inputOutput    SFNode instance IS instance
+				inputOutput    SFNode sentinel_script IS sentinel_script
+				inputOutput    SFFloat transparency 0
+			    url "javascript:
+					var focused;
+					var proto_name;
+					
+					function set_proto_name(value, timestamp)
+					{
+						var   scene = Browser.currentScene
+							, object = scene.createProto(value)
+							;
+							
+						print('set_proto_name: ' + value + ', timestamp = ' + timestamp);
+						proto_name = value;
+						transform.addChildren = new MFNode(object);				
+						scene.addRoute(myself, 'transparency_changed', object, 'transparency');
+						scene.addRoute(instance, 'remove_instance_changed', sentinel_script, 'set_removeChild');
+						if (value === 'Robot') {
+							scene.addRoute(instance, 'robot_position_changed', sentinel_script, 'set_robot_position');
+						}
+						startTime = timestamp;
+					}
+					//function instance(inst)
+					//{
+					//	print('ObjectScript, instance: instance = ' + inst);
+					//}
+					function set_fraction(value)
+					{
+						fraction_changed = 1.0 - value;
+					}
+					function set_transparency(value)
+					{
+						//print('set_transparency: ' + value);
+						transparency_changed = value;
+					}
+					function set_removeChild(child)
+					{
+						print('ObjectScript, removeChild: ' + child);
+						transform.removeChildren = new MFNode(child);
+					}
+					function addobject(proto, scale)
+					{
+						var   scene = Browser.currentScene
+							, object = scene.createProto('Object')
+							, shape
+							, translation = new SFVec3f(0.0, 0.5, 0.0);
+							;
+							
+						transform.addChildren = new MFNode(object);
+						object.set_translation = translation;
+						if (scale !== undefined) {
+							object.set_scale = scale;
+						}
+						object.set_instance = object;
+						object.set_sentinel_script = sentinel_script;
+						object.set_proto_name = proto;
+						scene.addRoute(object, 'remove_instance_changed', myself, 'set_removeChild');
+						if (proto === 'Robot') {
+							scene.addRoute(object, 'robot_position_changed', sentinel_script, 'set_robot_position');
+						}
+						print(object);
+						return object;
+					}
+					function keyPress(key, timestamp)
+					{
+						var object;
+						
+						if (focused)
+						{
+							print('ObjectScript, keyPress: key = ' + key + ', timestamp = ' + timestamp + ', proto_name = ' + proto_name);
+							if (key === 'a')
+							{
+								FadeOut.startTime = timestamp;
+							}				
+							if (proto_name === 'Robot' && key === 'q')
+							{
+								robot_position_changed = instance;
+							}				
+							if (proto_name === 'Boulder')
+							{
+								print('ObjectScript, Boulder: key = ' + key);
+								if (key === 'b')
+								{
+									object = addobject('Boulder');
+								}				
+								if (key === 'r')
+								{
+									object = addobject('Robot', new SFVec3f(0.5, 0.5, 0.5));
+								}				
+								if (key === 't')
+								{
+									object = addobject('Boom', new SFVec3f(0.5, 0.5, 0.5));
+								}				
+							}				
+						}
+					}
+					function isOver(value)
+					{
+						print('ObjectScript, isOver: ' + value);
+						focused = value;
+					}
+					function isActive(value)
+					{
+						print('ObjectScript, isActive: ' + value);
+						if (!value)
+						{
+							print('REMOVE');
+							remove_instance_changed = instance;
+						}
+					}"
+			}
+		]
+		ROUTE ObjectScript.startTime TO FadeIn.startTime 
+		ROUTE FadeIn.fraction_changed TO ObjectScript.set_fraction
+		ROUTE ObjectScript.fraction_changed TO ObjectScript.set_transparency
+		ROUTE Keyboard.keyPress TO ObjectScript.keyPress
+		ROUTE FadeOut.fraction_changed TO ObjectScript.set_transparency
+		ROUTE FadeOut.isActive TO ObjectScript.isActive
+		ROUTE TS.isOver TO ObjectScript.isOver
+	}
+}

@@ -1,0 +1,52 @@
+#VRML V2.0 utf8
+
+PROTO Pile
+[
+	exposedField  SFVec3f translation 0 0 0
+	eventIn       SFTime  creationtime
+	eventOut      SFTime  touchtime
+]
+{
+	DEF PileTransform Transform
+	{
+		translation IS translation
+		children
+		[
+			DEF T TouchSensor { }
+			DEF PileScript Script
+			{ 
+				eventIn SFTime touchTime
+				field SFNode PileTransform USE PileTransform
+				eventIn MFNode children_changed
+
+			    url "javascript:
+					var translation;
+					
+					function initialize()
+					{
+						translation = new SFVec3f(0, 0, 0);
+						Browser.createVrmlFromURL(new MFString('boulder.wrl'), PileTransform, 'addChildren');
+					}
+					function touchTime(value)
+					{
+						print('touchtime: touchtime = ' + value);
+						Browser.createVrmlFromURL(new MFString('boulder.wrl'), PileTransform, 'addChildren');
+					}
+					function children_changed(children, timestamp)
+					{
+						print(children);
+						if (children.length > 1)
+						{
+							children[children.length - 1].set_translation = translation;
+							children[children.length - 1].creationtime = timestamp;
+							translation.y += 0.5;
+						}
+					}"
+			}
+		]
+	}
+	ROUTE PileTransform.children_changed TO PileScript.children_changed
+	ROUTE T.touchTime TO PileScript.touchTime
+}
+
+Pile { }

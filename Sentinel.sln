@@ -1,0 +1,13 @@
+Microsoft Visual Studio Solution File, Format Version 1.00
+Project("{66355F20-A65B-11D0-BFB5-00A0C91EBFA0}") = "Sentinel", "Sentinel.vjp", "{E1B679CA-0E0D-4CF6-9287-9C354CFAC69D}"
+EndProject
+Global
+	GlobalSection(LocalDeployment) = postSolution
+		StartupProject = {E1B679CA-0E0D-4CF6-9287-9C354CFAC69D}
+	EndGlobalSection
+	GlobalSection(BuildOrder) = postSolution
+		0 = {E1B679CA-0E0D-4CF6-9287-9C354CFAC69D}
+	EndGlobalSection
+	GlobalSection(DeploymentRoot) = postSolution
+	EndGlobalSection
+EndGlobal
